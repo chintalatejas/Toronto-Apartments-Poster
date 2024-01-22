@@ -1,0 +1,167 @@
+
+library(readr) #Importing the libraries 
+library(ggplot2)
+library(tidyverse)
+library(treemapify)
+library(tidyverse)
+library(huxtable)
+
+data = read_csv("C:/Users/User/Documents/Fall 2022/STAT 842/Final Project/Apartment.csv") #Reading the data
+
+cleaned_data = data %>% rename_all(., .funs = tolower) #Converting the columns from upper case to lower case
+cleaned_data = cleaned_data %>% filter(!is.na(cleaned_data$latitude), !is.na(cleaned_data$longitude),
+                                       !is.na(cleaned_data$score)) %>% 
+  replace(is.na(.), 0) #Filtering those data that has no NA values in "longitude", "latitude" and "score" columns and replacing other NA values with 0 in other columns.
+
+#Plot the contour plot with facet wrapping according to the "property_type" 
+ggplot(data =cleaned_data, aes(x=longitude, y= latitude)) + 
+  geom_point(aes(color=wardname))+ geom_density_2d(linewidth=0.25, color="black")+
+  geom_density_2d_filled(alpha=0.5) +
+  facet_wrap(~property_type) + 
+  scale_fill_brewer(palette = 1, direction=-1) + theme(legend.position="none")+
+  theme(panel.background = element_rect(fill = "white", colour = "grey50"))+
+  scale_colour_viridis_d() +
+  xlab("Longitude")+
+  ylab("Latitude")
+
+
+cleaned_data = data %>% rename_all(., .funs = tolower) #Converting the columns from upper case to lower case
+cleaned_data = cleaned_data %>% filter(!is.na(cleaned_data$latitude), !is.na(cleaned_data$longitude),
+                                       !is.na(cleaned_data$score)) %>% 
+  replace(is.na(.), 0) #Filtering those data that has no NA values in longitude, latitude and score columns and replacing other NA values with 0 in other columns
+
+#Getting the Mean score and the number of apartments in each ward
+filtered_data = cleaned_data %>% group_by(wardname) %>% 
+  mutate(Total_Score = sum(score)) %>%
+  count(wardname,Total_Score) %>%
+  mutate(Count = n, mean_score = Total_Score/n, n= NULL, Total_Score = NULL) %>%
+  arrange(desc(mean_score)) %>%
+  head(n=10)%>%
+  rename("Ward" = wardname,
+         "Number" = Count,
+         "Avg_Score" = mean_score) %>%
+  as.data.frame()
+
+#Plotting the treemap with area set as the number of apartments and the fill parameter as the "mean_score"
+p <- ggplot(filtered_data, aes(area = Number, fill = Avg_Score, label= Ward )) +
+  geom_treemap()
+p + geom_treemap_text(fontface = "bold",
+                      color="black",
+                      place="centre",grow= TRUE,
+                      size= 4, reflow = T)+
+  scale_fill_viridis_c()
+
+
+
+data = read_csv("C:/Users/User/Documents/Fall 2022/STAT 842/Final Project/Apartment.csv") #Reading the data
+
+cleaned_data = data %>% rename_all(., .funs = tolower) #Converting the columns from upper case to lower case
+cleaned_data = cleaned_data %>% filter(!is.na(cleaned_data$latitude), !is.na(cleaned_data$longitude),
+                                       !is.na(cleaned_data$score)) %>% 
+  replace(is.na(.), 0) #Filtering those data that has no NA values in longitude, latitude and score columns and replacing other NA values with 0 in other columns
+
+#Getting the Mean score and the number of apartments in each ward
+filtered_data = cleaned_data %>% group_by(wardname) %>% 
+  mutate(Total_Score = sum(score)) %>%
+  count(wardname,Total_Score) %>%
+  mutate(Count = n, mean_score = Total_Score/n, n= NULL, Total_Score = NULL) %>%
+  arrange(desc(mean_score)) %>%
+  head(n=10)%>%
+  rename("Ward" = wardname,
+         "Number" = Count,
+         "Avg_Score" = mean_score) %>%
+  as.data.frame()
+
+#Plotting the treemap with area set as the number of apartments and the fill parameter as the "mean_score"
+p <- ggplot(filtered_data, aes(area = Number, fill = Avg_Score, label= Ward )) +
+  geom_treemap()
+p + geom_treemap_text(fontface = "bold",
+                      color="black",
+                      place="centre",grow= TRUE,
+                      size= 4, reflow = T)+
+  scale_fill_viridis_c()
+
+
+data = read_csv("C:/Users/User/Documents/Fall 2022/STAT 842/Final Project/Apartment.csv") #Loading the data
+
+cleaned_data = data %>% rename_all(., .funs = tolower) #Converting the columns from upper case to lower case
+cleaned_data = cleaned_data %>% filter(!is.na(cleaned_data$latitude), !is.na(cleaned_data$longitude),
+                                       !is.na(cleaned_data$score)) %>% 
+  replace(is.na(.), 0) #Filtering those data that has no NA values in "longitude", "latitude" and "score" columns and replacing other NA values with 0 in other columns.
+
+
+#Finding the Maximum, minimum and average scores of each ward
+filtered_data = cleaned_data %>% group_by(wardname) %>% 
+  mutate(Max_Score = max(score), Min_Score = min(score), Total_Score = sum(score)) %>%
+  count(wardname,Total_Score, Max_Score, Min_Score) %>%
+  mutate(mean_score = Total_Score/n, n= NULL, Total_Score = NULL) %>%
+  arrange(desc(mean_score)) %>%
+  head(n=10) %>%
+  rename("Ward" = wardname,
+         "Max Score" = Max_Score,
+         "Min Score" = Min_Score,
+         "Avg Score" = mean_score) %>%
+  as.data.frame()
+
+#Making the huxtable pipeline with the parameters
+ht = hux(filtered_data, add_colnames = TRUE)
+
+ht                                    %>%
+  set_bold(1, everywhere)             %>%
+  set_bottom_border(1, everywhere)    %>%
+  set_top_border(1,everywhere)        %>%
+  set_left_border(1,everywhere)       %>%
+  set_right_border(1, everywhere)     %>%
+  set_background_color(odds, everywhere, "grey95") %>%
+  set_all_borders(1) %>%
+  set_align(everywhere, everywhere, "center") %>%
+  set_bold(c(6,11),2) %>%
+  set_italic(2,4) %>%
+  set_bold(2,4) %>%
+  set_background_color(c(6,11), 2, "red") %>%
+  set_background_color(7, 3, "blue") %>%
+  set_bold(7,3) %>%
+  set_background_color(2,4, "yellow") %>%
+  set_caption("Table 2: Every Wards Maximum, Minimum and Average Score")
+
+data = read_csv("C:/Users/User/Documents/Fall 2022/STAT 842/Final Project/Apartment.csv") #Reading the data
+
+
+cleaned_data = data %>% rename_all(., .funs = tolower) #Converting the columns from upper case to lower case
+cleaned_data = cleaned_data %>% filter(!is.na(cleaned_data$latitude), !is.na(cleaned_data$longitude),
+                                       !is.na(cleaned_data$score)) %>% 
+  replace(is.na(.), 0) #Filtering those data that has no NA values in "longitude", "latitude" and "score" columns and replacing other NA values with 0 in other columns.
+
+
+#Finding the number of apartments in each category and its average score
+filtered_data1 = cleaned_data %>% group_by(property_type) %>% 
+  mutate(Total_Score = sum(score)) %>%
+  count(property_type,Total_Score) %>%
+  mutate(Count = n, mean_score = Total_Score/n, n= NULL, Total_Score = NULL) %>%
+  arrange(desc(Count)) %>%
+  rename("Property Type" = property_type,
+         "Number of Apartments" = Count,
+         "Avg Score" = mean_score) %>%
+  as.data.frame()
+
+
+#Making the huxtable pipeline with the parameters
+ht1 = hux(filtered_data1, add_colnames = TRUE)
+ht1[2, 1] = "Private"
+ht1[4,1] = "Social Housing"
+
+ht1                                   %>%
+  set_bold(1, everywhere)             %>%
+  set_bottom_border(1, everywhere)    %>%
+  set_background_color(odds, everywhere, "grey95") %>%
+  set_left_border(everywhere, 1, brdr(3, "double", "black")) %>%
+  set_right_border(everywhere, 1, brdr(3, "double", "black")) %>%
+  set_right_border(everywhere, 2, brdr(3, "double", "black")) %>%
+  set_right_border(everywhere, 3, brdr(3, "double", "black")) %>%
+  set_bottom_border(4, everywhere, brdr(3, "double", "black")) %>%
+  set_top_border(1, everywhere, brdr(3, "double", "black")) %>%
+  set_align(everywhere, everywhere, "center") %>%
+  set_bold(2,2) %>%
+  set_italic(2,2) %>%
+  set_background_color(2, 2, "red") %>%
+  set_caption("Table 1: Number of apartmens per category")
